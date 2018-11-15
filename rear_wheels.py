@@ -75,6 +75,8 @@ class Rear_Wheels(object):
         if self._DEBUG:
             print(self._DEBUG_INFO, 'Running forward with speed')
 
+    def go_forward(self, left_spd, right_spd):
+
     def go_backward(self, speed_value):
         """ Move both wheels backward with speed """
         # Setup motor speed

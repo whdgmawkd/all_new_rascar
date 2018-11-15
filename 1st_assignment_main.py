@@ -24,8 +24,17 @@ class myCar(object):
     # =======================================================================
     def car_startup(self):
         # Implement the assignment code here.
-        pass
-
+        arg = [[30,15],[50,20],[70,25]]
+        for spd,dst in arg:
+            self.car.accelerator.go_forward(spd)
+            while True:
+                print(self.car.distance_detector.get_distance())
+                time.sleep(0.1)
+                if 0 <= self.car.distance_detector.get_distance() <= dst:
+                    break
+            self.car.accelerator.go_backward(spd)
+            time.sleep(4)
+        self.drive_parking()
 
 if __name__ == "__main__":
     try:
