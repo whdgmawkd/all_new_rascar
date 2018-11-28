@@ -1,0 +1,168 @@
+#########################################################################
+# Date: 2018/10/02
+# file name: 3rd_assignment_main.py
+# Purpose: this code has been generated for the 4 wheel drive body
+# moving object to perform the project with line detector
+# this code is used for the student only
+#########################################################################
+
+from car import Car
+import time
+
+
+class myCar(object):
+
+    def __init__(self, car_name):
+        self.car = Car(car_name)
+        # PID configure
+        self.Kp = 17
+        self.Ki = 0
+        self.Kd = 0
+        self.last_error = 0
+        self.error_sum = 0
+        self.obs_cnt=0
+        self.enable_dist = True
+        self.time = time.time()
+
+    def drive_parking(self):
+        self.car.drive_parking()
+
+    def get_error(self):
+        sensor = self.car.line_detector.read_digital()
+        curtime = time.time()
+        cnt, error = 0, 0
+        for i in range(0, 5):
+            if sensor[i] == 1:
+                error += (i - 2)
+                cnt += 1
+        if cnt != 0:
+            error /= cnt
+#         print("error:",error,"cnt:",cnt, "time:",curtime - self.time)
+        self.time = curtime
+        return error, cnt
+
+    def get_pid(self, error):
+        self.error_sum += error
+        p_term = self.Kp * error
+        i_tern = self.Ki * self.error_sum * 0.001
+        d_term = self.Kd * (error - self.last_error)
+        self.last_error = error
+        return p_term + i_tern + d_term
+
+    def turn_left_back(self, speed):
+        error, cnt = self.get_error()
+        self.car.accelerator.go_backward(speed)
+        self.car.steering.turn(150)
+        time.sleep(0.1)
+        while True:
+            error, cnt = self.get_error()
+            if cnt != 0 and error != -2:
+                break;
+#         self.car.accelerator.go_forward(speed)
+#         self.car.steering.turn(30)
+#         time.sleep(0.1)
+#         while True:
+#             error, cnt = self.get_error()
+#             if cnt!=0 and error != -2:
+#                 return
+    
+    def turn_left_go(self,speed):
+        self.car.accelerator.go_forward(speed)
+        self.car.steering.turn(50)
+        while True:
+            error, cnt = self.get_error()
+            if cnt!=0 and error != -2:
+                return
+
+    def track(self,speed):
+        while True:
+            sensor = self.car.line_detector.read_digital()
+            direction = 0
+            if sensor[2]:
+                direction = 0
+            elif sensor[1]:
+                direction = -17
+            elif sensor[3]:
+                direction = 17
+            elif sensor[0]:
+                direction = -35
+            elif sensor[4]:
+                direction = 35
+            self.car.steering.turn(90+direction)
+                
+            
+    
+    def obstacle(self,speed):
+        self.obs_cnt+=1
+        self.car.steering.turn(40)
+        sleeptime = 1/speed * 20
+        print("obstacle: sleep:",sleeptime)
+        time.sleep(sleeptime)
+        self.car.steering.turn(90)
+        while True:
+            error,cnt = self.get_error()
+            if cnt!=0:
+                print("obstacle: mid line found")
+                break
+        self.car.steering.turn(140)
+        while True:
+            error,cnt = self.get_error()
+            if cnt==0:
+                print("obstacle: end of mid line")
+                break
+        time.sleep(sleeptime/2)
+        self.car.steering.turn(110)
+        while True:
+            error,cnt = self.get_error()
+            if cnt!=0:
+                print("obstacle: main line found")
+                break
+        time.sleep(0.1)
+        self.car.steering.turn(40)
+        while True:
+            error,cnt = self.get_error()
+            if cnt!= 0 and error <= 0:
+                print("stable main line")
+                break
+
+    def car_startup(self):
+        track(0)
+                
+    def car_startup_b(self):
+        speed = 40
+        self.car.accelerator.go_forward(speed)
+        while True:
+            error, cnt = self.get_error()
+            dist = self.car.distance_detector.get_distance()
+            if cnt==5 and abs(self.last_error) <= 1.5:
+                print("startline")
+                self.enable_dist = True
+            if self.obs_cnt >= 4 and abs(self.last_error) < 1.5 and cnt==5:
+                break
+            
+            if self.last_error <= -1.5 and cnt == 0:
+#             if cnt==0:
+                self.turn_left_back(speed)
+#                 self.turn_left_go(speed)
+#             else:
+            angle = self.get_pid(error)
+            self.car.accelerator.go_forward(speed)
+#             print("angle:",angle)
+#             print("obs cnt:",self.obs_cnt)
+            print("dist:",dist)
+            self.car.steering.turn(angle + 90)
+            if 0<= dist <= 25 and self.enable_dist:
+                self.obstacle(speed)
+                if self.obs_cnt == 2:
+                    self.enable_dist = False
+        print("finished")
+        self.car.drive_parking()
+
+if __name__ == "__main__":
+    try:
+        myCar = myCar("CarName")
+        myCar.car_startup()
+    except:
+        # when the Ctrl+C key has been pressed,
+        # the moving object will be stopped
+        myCar.drive_parking()
