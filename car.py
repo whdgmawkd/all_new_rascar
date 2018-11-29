@@ -69,14 +69,14 @@ class Car(object):
             # ================================================================
             # RGB MODULE DRIVER INITIALIZE
             # ================================================================
-            # self.color_getter = RGB_Sensor.TCS34725()
-            # if self.color_getter.get_exception_occur():
-            #     print("[ERRNO-101] There is a problem with RGB_Sensor(TCS34725)")
+            self.color_getter = RGB_Sensor.TCS34725()
+            if self.color_getter.get_exception_occur():
+                print("[ERRNO-101] There is a problem with RGB_Sensor(TCS34725)")
 
             # ================================================================
             # DISABLE RGB MODULE INTERRUPTION
             # ================================================================
-            # self.color_getter.set_interrupt(False)
+            self.color_getter.set_interrupt(False)
 
             # ================================================================
             # PCA9685(PWM 16-ch Extension Board) MODULE WAKEUP
@@ -99,7 +99,7 @@ class Car(object):
             # ================================================================
             # SET LIMIT OF TURNING DEGREE
             # ===============================================================
-            self.steering.turning_max = 35
+            self.steering.turning_max = 50
 
             # ================================================================
             # SET FRONT WHEEL CENTOR ALLIGNMENT
