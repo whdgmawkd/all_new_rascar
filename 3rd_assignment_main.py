@@ -8,6 +8,7 @@
 
 from car import Car
 import time
+import TCS34725.TCS34725_RGB as rgb
 
 
 class myCar(object):
@@ -25,6 +26,7 @@ class myCar(object):
         self.car.drive_parking()
 
     def get_error(self):
+        rgb.calculate_color_temperature(1,2,3)
         sensor = self.car.line_detector.read_digital()
         cnt, error = 0, 0
         for i in range(0, 5):
